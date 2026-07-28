@@ -197,8 +197,32 @@ table.rev th{color:var(--ink3);font-weight:700;font-size:10px;letter-spacing:.05
 .acts a,.acts button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;
   padding:12px 8px;border-radius:11px;font-size:13.5px;font-weight:700;text-decoration:none;
   background:var(--surface2);color:var(--ink);border:1px solid var(--line)}
-.acts a.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
+.acts a.pri,.acts button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}
 .acts button.favOn{background:var(--accent);color:#fff;border-color:var(--accent)}
+.acts #favBtn2{flex:0 0 52px}
+.peekTop{display:flex;align-items:flex-start;gap:10px}
+.peekTop h2{margin:0}
+.peekLine{font-size:13px;line-height:1.55;color:var(--ink2);padding:3px 0}
+.peekLine b{color:var(--ink3);font-size:11.5px;font-weight:700;margin-right:7px}
+
+/* ---------- 일정: 모드 · 시간대 옵션 ---------- */
+.modeBar{display:flex;gap:6px;background:var(--surface2);padding:4px;border-radius:12px;margin-bottom:10px}
+.modeBar button{flex:1;padding:9px 6px;border-radius:9px;font-size:12.5px;font-weight:700;color:var(--ink3)}
+.modeBar button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.modeDesc{font-size:12px;color:var(--ink2);line-height:1.55;margin:0 2px 14px}
+.opts{display:flex;flex-direction:column;gap:6px;margin-top:7px}
+.opt{display:flex;align-items:flex-start;gap:9px;width:100%;text-align:left;padding:9px 10px;
+  border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:12.5px;line-height:1.5}
+.opt.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 7%,var(--surface))}
+.opt .mk{width:15px;height:15px;border-radius:50%;border:2px solid var(--line);flex:none;margin-top:2px}
+.opt.on .mk{border-color:var(--accent);background:var(--accent);box-shadow:inset 0 0 0 2.5px var(--surface)}
+.opt .on1{display:block;font-weight:700;color:var(--ink)}
+.opt .on2{display:block;color:var(--ink2);margin-top:3px;font-size:12px;line-height:1.5}
+.envTag{font-size:10.5px;font-weight:700;padding:1px 6px;border-radius:999px;margin-left:5px;
+  border:1px solid var(--line);color:var(--ink3);white-space:nowrap}
+.envTag.out{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,transparent)}
+.heatRow{display:flex;gap:7px;align-items:center;font-size:11.5px;color:var(--warn);
+  font-weight:700;margin:-4px 2px 12px}
 
 /* ---------- 하단 탭 ---------- */
 #tabs{position:absolute;left:0;right:0;bottom:0;z-index:50;display:flex;
@@ -247,14 +271,16 @@ const CATC={spot:"var(--c-spot)",local:"var(--c-local)",tourist:"var(--c-tourist
 
 /* ===== 상태 ===== */
 const LS="osaka2607";
-let S={cats:{spot:1,local:1,tourist:1},maxMin:90,day:"any",fav:0,q:"",view:"map",sel:null};
+let S={cats:{spot:1,local:1,tourist:1},maxMin:90,day:"any",fav:0,q:"",view:"map",sel:null,shade:0};
+const ENVN={in:"실내",cov:"지붕·아케이드",out:"실외"};
+const ENVI={in:"❄",cov:"⛱",out:"☀"};
 let fav=new Set(JSON.parse(localStorage.getItem(LS+"f")||"[]"));
 let theme=localStorage.getItem(LS+"t")||"";
 if(theme)document.documentElement.dataset.theme=theme;
 
 /* ===== 지도 수학 ===== */
 const map=document.getElementById("map"),tilesEl=document.getElementById("tiles"),pinsEl=document.getElementById("pins");
-let cam={lat:HOTEL.lat,lng:HOTEL.lng,z:14.2};
+let cam={lat:HOTEL.lat,lng:HOTEL.lng,z:14.2},CL=[];
 const MINZ=9.6,MAXZ=17.2;
 const lon2x=(l,z)=>(l+180)/360*256*Math.pow(2,z);
 const lat2y=(l,z)=>(1-Math.asinh(Math.tan(l*Math.PI/180))/Math.PI)/2*256*Math.pow(2,z);
@@ -302,11 +328,13 @@ function render(){
   const hs=place(HOTEL);
   if(hs.x>-40&&hs.x<W+40&&hs.y>-40&&hs.y<H+40)
     html.push(`<div class="pin" id="hotelPin" style="left:${hs.x}px;top:${hs.y}px" data-id="hotel"><div class="head"></div><div class="lbl">숙소</div></div>`);
+  CL=[];
   for(const [,g] of grid){
     if(g.length===1){out.push({solo:g[0].p,s:g[0].s});continue;}
     const ax=g.reduce((a,b)=>a+b.s.x,0)/g.length, ay=g.reduce((a,b)=>a+b.s.y,0)/g.length;
     const cats=new Set(g.map(o=>o.p.cat)), col=cats.size===1?CATC[[...cats][0]]:"var(--ink)";
-    html.push(`<div class="cluster" style="left:${ax}px;top:${ay}px;border-color:${col};color:${col}" data-cl="${ax},${ay}">${g.length}</div>`);
+    const ci=CL.push({x:ax,y:ay,ids:g.map(o=>o.p.id)})-1;
+    html.push(`<div class="cluster" style="left:${ax}px;top:${ay}px;border-color:${col};color:${col}" data-ci="${ci}">${g.length}</div>`);
   }
   // 라벨은 겹치지 않는 것만 — 선택 > 저장 > 가까운 순으로 자리를 먼저 차지
   out.sort((a,b)=>(S.sel===b.solo.id)-(S.sel===a.solo.id)
@@ -336,6 +364,7 @@ function filtered(){
     && p.min<=S.maxMin
     && openOn(p)
     && (!S.fav||fav.has(p.id))
+    && (!S.shade||p.env!=="out")
     && (!q||[p.ko,p.ja,p.area,p.genre,p.must,p.desc].join(" ").toLowerCase().includes(q)));
 }
 const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -353,6 +382,7 @@ function drawChips(){
     +`<span style="flex:none;width:1px;background:var(--line);margin:3px 2px"></span>`
     +[["any","전체"],["sat","8/1 토 영업"],["sun","8/2 일 영업"]].map(([v,l])=>
         `<button class="chip ${S.day===v?"on":""}" data-day="${v}">${l}</button>`).join("")
+    +`<button class="chip ${S.shade?"on":""}" data-shade="1">❄ 실내·그늘</button>`
     +`<button class="chip ${S.fav?"on":""}" data-fav="1">★ 저장</button>`;
 }
 chipsEl.onclick=e=>{
@@ -360,6 +390,7 @@ chipsEl.onclick=e=>{
   if(b.dataset.cat){const c=b.dataset.cat;S.cats[c]=!S.cats[c];}
   else if(b.dataset.min)S.maxMin=+b.dataset.min;
   else if(b.dataset.day)S.day=b.dataset.day;
+  else if(b.dataset.shade)S.shade=!S.shade;
   else if(b.dataset.fav)S.fav=!S.fav;
   refresh();
 };
@@ -411,7 +442,9 @@ function openSheet(id){
       <span class="badge cat" style="background:${CATC[p.cat]}">${CATN[p.cat]}</span>
       ${p.genre?`<span class="badge">${esc(p.genre)}</span>`:""}
       <span class="badge">${esc(p.area)}</span>
+      <span class="badge ${p.env==="out"?"":""}" style="${p.env==="out"?"color:var(--warn)":""}">${ENVI[p.env]} ${ENVN[p.env]}</span>
       ${p.walk?`<span class="badge" style="color:var(--c-local)">숙소 도보권</span>`:""}
+      ${p.queue?`<span class="badge" style="color:var(--warn)">줄 김</span>`:""}
       ${p.cash?`<span class="badge">현금만</span>`:""}
     </div>
     <h2>${esc(p.ko)}</h2>
@@ -453,15 +486,76 @@ sheet.addEventListener("touchend",e=>{
   sheet.style.transform=""; if(d>95)closeSheet(); sy0=null;
 });
 
+/* ===== 핀 요약 카드 (한 번 누르면 핵심만) ===== */
+function chipsFor(p){
+  const t=[];
+  t.push(`<span class="badge cat" style="background:${CATC[p.cat]}">${CATN[p.cat]}</span>`);
+  if(p.genre)t.push(`<span class="badge">${esc(p.genre)}</span>`);
+  t.push(`<span class="badge">${ENVI[p.env]} ${ENVN[p.env]}</span>`);
+  if(p.walk)t.push(`<span class="badge" style="color:var(--c-local)">도보 ${Math.max(1,Math.round(p.km*13))}분</span>`);
+  if(p.queue)t.push(`<span class="badge" style="color:var(--warn)">줄 김</span>`);
+  if(p.cash)t.push(`<span class="badge">현금만</span>`);
+  return t.join("");
+}
+function openPeek(id){
+  const p=P.find(x=>x.id===id); if(!p)return;
+  S.sel=id;
+  const closedNote=p.sun===false||p.sat===false
+    ? `<span style="color:var(--warn);font-weight:700">${p.sat===false?"8/1 토 휴무":""}${p.sat===false&&p.sun===false?" · ":""}${p.sun===false?"8/2 일 휴무":""}</span>`
+    : `<span style="color:var(--ink3)">8/1·8/2 모두 영업</span>`;
+  sheetBody.innerHTML=`
+    <div class="peekTop">
+      <div style="flex:1;min-width:0">
+        <h2 style="font-size:18px">${esc(p.ko)}</h2>
+        <div style="font-size:12px;color:var(--ink3);margin-top:2px">${esc(p.ja)}</div>
+      </div>
+      <span class="mins" style="font-size:13px;padding:6px 9px">${p.min}분</span>
+    </div>
+    <div class="badges" style="margin:10px 0 9px">${chipsFor(p)}</div>
+    ${p.must?`<div class="peekLine"><b>대표</b> ${esc(p.must)}</div>`:""}
+    ${p.hours?`<div class="peekLine"><b>영업</b> ${esc(p.hours)}</div>`:""}
+    <div class="peekLine"><b>휴무</b> ${esc(p.closed||"—")} · ${closedNote}</div>
+    <div class="acts" style="margin-top:13px">
+      <button class="pri" id="moreBtn">자세히</button>
+      <a href="${gdir(p)}" target="_blank" rel="noopener">길찾기</a>
+      <button id="favBtn2" class="${fav.has(p.id)?"favOn":""}">${fav.has(p.id)?"★":"☆"}</button>
+    </div>`;
+  sheetBody.querySelector("#moreBtn").onclick=()=>openSheet(id);
+  sheetBody.querySelector("#favBtn2").onclick=()=>{
+    fav.has(p.id)?fav.delete(p.id):fav.add(p.id);
+    localStorage.setItem(LS+"f",JSON.stringify([...fav]));
+    openPeek(id); refresh();
+  };
+  sheet.classList.add("on"); scrim.classList.add("on"); sheetBody.scrollTop=0;
+  render();
+}
+function openCluster(ci){
+  const c=CL[ci]; if(!c)return;
+  const items=c.ids.map(id=>P.find(x=>x.id===id)).sort((a,b)=>a.min-b.min);
+  sheetBody.innerHTML=`
+    <h2 style="font-size:18px">이 자리에 ${items.length}곳</h2>
+    <div style="font-size:12px;color:var(--ink3);margin:3px 0 12px">가까이 붙어 있어 묶여 있습니다. 눌러서 확인하세요.</div>
+    ${items.map(p=>`<button class="row" data-peek="${p.id}">
+      <i class="stripe" style="background:${CATC[p.cat]}"></i>
+      <div class="body">
+        <div class="t">${esc(p.ko)}${fav.has(p.id)?" ★":""}</div>
+        <div class="ja">${ENVI[p.env]} ${esc(p.genre||"")} · ${esc(p.area)}</div>
+      </div><span class="mins">${p.min}분</span></button>`).join("")}
+    <div class="acts" style="margin-top:10px"><button class="pri" id="zoomIn">이 근처 확대</button></div>`;
+  sheetBody.querySelectorAll("[data-peek]").forEach(b=>b.onclick=()=>openPeek(b.dataset.peek));
+  sheetBody.querySelector("#zoomIn").onclick=()=>{
+    const tz=pickTZ(cam.z),sc=Math.pow(2,cam.z-tz);
+    cam.lng=x2lon(lon2x(cam.lng,tz)+(c.x-map.clientWidth/2)/sc,tz);
+    cam.lat=y2lat(lat2y(cam.lat,tz)+(c.y-map.clientHeight/2)/sc,tz);
+    cam.z=Math.min(MAXZ,cam.z+1.8); closeSheet();
+  };
+  sheet.classList.add("on"); scrim.classList.add("on"); sheetBody.scrollTop=0;
+}
+
 /* ===== 지도 인터랙션 ===== */
 pinsEl.onclick=e=>{
-  const cl=e.target.closest(".cluster");
-  if(cl){const [x,y]=cl.dataset.cl.split(",").map(Number);
-    const tz=pickTZ(cam.z),sc=Math.pow(2,cam.z-tz);
-    const cx=lon2x(cam.lng,tz),cy=lat2y(cam.lat,tz);
-    cam.lng=x2lon(cx+(x-map.clientWidth/2)/sc,tz); cam.lat=y2lat(cy+(y-map.clientHeight/2)/sc,tz);
-    cam.z=Math.min(MAXZ,cam.z+1.6); render(); return;}
-  const pin=e.target.closest(".pin"); if(pin)openSheet(pin.dataset.id);
+  const cl=e.target.closest(".cluster"); if(cl){openCluster(+cl.dataset.ci);return;}
+  const pin=e.target.closest(".pin"); if(pin)openPeek(pin.dataset.id);
 };
 let ptrs=new Map(),last=null,pinchD=0;
 map.addEventListener("pointerdown",e=>{
@@ -524,15 +618,58 @@ function goMap(id){
   document.querySelector('#tabs button[data-v="map"]').click();
   cam={lat:p.lat,lng:p.lng,z:Math.max(cam.z,15.4)};
   if(!S.cats[p.cat]){S.cats[p.cat]=1;drawChips();}
-  render(); openSheet(id);
+  if(S.shade&&p.env==="out"){S.shade=0;drawChips();}
+  render(); openPeek(id);
 }
 document.getElementById("plan").onclick=e=>{const g=e.target.closest("[data-go]");if(g)goMap(g.dataset.go);};
 
 function refresh(){drawChips();drawList();if(S.view==="map")render();
   document.getElementById("subline").textContent=`7/31–8/3 · 숙소 닛폰바시 · ${filtered().length}곳`;}
 
-/* ===== 일정 ===== */
-document.getElementById("plan").innerHTML=__PLAN__;
+/* ===== 일정 (모드 전환 + 시간대별 옵션) ===== */
+const PLAN=__PLAN__, planEl=document.getElementById("plan");
+let mode=localStorage.getItem(LS+"m")||"heat";
+let pick=JSON.parse(localStorage.getItem(LS+"p")||"{}");
+
+function renderPlan(){
+  const days=PLAN.days[mode], m=PLAN.modes.find(x=>x.key===mode);
+  let h=`<div class="modeBar">${PLAN.modes.map(x=>
+      `<button class="${x.key===mode?"on":""}" data-mode="${x.key}">${x.label}</button>`).join("")}</div>
+    <p class="modeDesc">${m.desc}</p>`;
+  days.forEach((d,di)=>{
+    h+=`<div class="day"><h3>${d.t}</h3><div class="when">${d.when}</div>`;
+    if(d.callout)h+=`<div class="callout" style="margin:0 0 12px">${d.callout}</div>`;
+    d.slots.forEach((s,si)=>{
+      const key=mode+di+"_"+si, sel=pick[key]??0;
+      h+=`<div class="step ${s.key?"key":""}"><span class="tm">${s.tm}</span><i class="kn"></i><div class="txt">
+        <b>${s.title}</b>${s.env?`<span class="envTag ${s.env}">${ENVI[s.env]} ${ENVN[s.env]}</span>`:""}
+        ${s.note?`<div class="note">${s.note}</div>`:""}`;
+      if(s.opts){
+        h+=`<div class="opts">`+s.opts.map((o,oi)=>`
+          <button class="opt ${oi===sel?"on":""}" data-k="${key}" data-o="${oi}">
+            <i class="mk"></i>
+            <span style="flex:1;min-width:0">
+              <span class="on1">${o.label}${o.env?`<span class="envTag ${o.env}">${ENVI[o.env]} ${ENVN[o.env]}</span>`:""}</span>
+              ${o.note?`<span class="on2">${o.note}</span>`:""}
+            </span>
+            ${o.id?`<span class="go" data-go="${o.id}" style="margin:0;flex:none">지도</span>`:""}
+          </button>`).join("")+`</div>`;
+      }
+      h+=`</div></div>`;
+    });
+    h+=`</div>`;
+  });
+  h+=PLAN.footer;
+  planEl.innerHTML=h;
+}
+planEl.onclick=e=>{
+  const g=e.target.closest("[data-go]"); if(g){e.stopPropagation();goMap(g.dataset.go);return;}
+  const mb=e.target.closest("[data-mode]");
+  if(mb){mode=mb.dataset.mode;localStorage.setItem(LS+"m",mode);renderPlan();return;}
+  const o=e.target.closest(".opt");
+  if(o){pick[o.dataset.k]=+o.dataset.o;localStorage.setItem(LS+"p",JSON.stringify(pick));renderPlan();}
+};
+renderPlan();
 
 addEventListener("resize",()=>{if(S.view==="map")render();});
 drawChips();drawList();render();refresh();

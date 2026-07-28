@@ -48,6 +48,27 @@ OPEN_OVERRIDE = {  # 규칙으로 안 잡히는 케이스 수동 확정 (8/1=첫
     "toraya": (True, True), "arima": (True, True), "nakanoshima": (True, True),
 }
 
+# ── 폭염 대응: 실내(in) / 지붕·아케이드(cov) / 실외(out) ──────────────
+ENV = {
+    # 실외 — 한낮(11~16시)에 오래 있으면 위험
+    "glico": "out", "hozenji": "out", "amemura": "out", "nambayasaka": "out",
+    "osakajo": "out", "shitennoji": "out", "nakazakicho": "out", "tenmangu": "out",
+    "sumiyoshi": "out", "koreatown": "out", "usj": "out", "karahori": "out",
+    "fushimi": "out", "kiyomizu": "out", "gion": "out", "arashiyama": "out",
+    "kinkakuji": "out", "todaiji": "out", "narapark": "out", "kasuga": "out",
+    "naramachi": "out", "kitano": "out", "nankinmachi": "out", "meriken": "out",
+    "himeji": "out", "byodoin": "out",
+    # 지붕 있는 아케이드 — 한낮에도 걸을 만함 (오사카의 큰 이점)
+    "kuromon": "cov", "shinsaibashi": "cov", "denden": "cov",
+    "tenjinbashi": "cov", "nishiki": "cov",
+    # 냉방 실내 — 한낮 피난처
+    "harukas": "in", "umedasky": "in", "nakanoshima": "in", "kaiyukan": "in",
+    "tsutenkaku": "in", "arima": "in",
+}
+# 실외 줄서기가 긴 집 — 폭염엔 오픈런 아니면 피할 것
+QUEUE = {"mizuno", "ichiran", "moeyo", "roshoki", "yaekatsu", "daruma",
+         "rikuro", "horai", "chitose", "jinrui", "kiji", "kyuyamutei"}
+
 hotel = [x for x in d if x["cat"] == "hotel"][0]
 def dist_km(a, b):
     R = 6371; p1, p2 = math.radians(a[0]), math.radians(b[0])
@@ -64,6 +85,8 @@ for p in d:
     p["sat"], p["sun"] = OPEN_OVERRIDE.get(p["id"], open_days(p.get("closed")))
     p["km"] = round(dist_km((hotel["lat"], hotel["lng"]), (p["lat"], p["lng"])), 2)
     p["walk"] = p["km"] <= 1.3
+    p["env"] = ENV.get(p["id"], "in")   # 식당·카페는 기본 실내
+    if p["id"] in QUEUE: p["queue"] = True
     if p["id"] == "chitose":
         p["warn"] = ("본점은 10:30~14:30 · 화/금 휴무. 문 닫았으면 난바 그랜드 카게츠 1층 "
                      "「千とせ べっかん」이 11:00~20:00 무휴로 같은 니쿠스이를 판다.")
