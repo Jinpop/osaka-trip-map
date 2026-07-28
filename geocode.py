@@ -29,7 +29,7 @@ def region_of(area):
     if area in ("교토", "교토동부", "아라시야마", "후시미"): return "kyoto"
     if area == "우지":   return "uji"
     if area == "나라":   return "nara"
-    if area in ("고베", "고베기타노", "아리마"): return "kobe"
+    if area in ("고베", "고베기타노", "고베베이", "아리마"): return "kobe"
     if area == "히메지": return "himeji"
     return "osaka"
 

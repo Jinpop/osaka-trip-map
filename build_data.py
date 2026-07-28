@@ -26,7 +26,7 @@ ROUTE = {
     "후시미": "케이한 후시미이나리역", "우지": "JR 나라선 우지역",
     "나라": "킨테츠 닛폰바시→킨테츠나라 급행 약 40분 (환승 없음)",
     "고베": "한신 오사카난바→고베산노미야 쾌속급행 40분 (환승 없음)",
-    "고베기타노": "산노미야에서 도보 15분 언덕", "아리마": "산노미야→신코베→기타신치선",
+    "고베기타노": "산노미야에서 도보 15분 언덕", "고베베이": "산노미야→포트라이너 10분", "아리마": "산노미야→신코베→기타신치선",
     "히메지": "우메다→JR 신쾌속 히메지 62분",
 }
 
@@ -62,6 +62,9 @@ ENV = {
     "kuromon": "cov", "shinsaibashi": "cov", "denden": "cov",
     "tenjinbashi": "cov", "nishiki": "cov",
     # 냉방 실내 — 한낮 피난처
+    "nekorepublic":"in","gurugurudo":"in","nekoeniwa":"in","mipig":"in","harrywood":"in",
+    "rockstar":"in","kawauso":"in","reptile":"in","animeal":"in","raptorland":"in",
+    "whiterabbit":"in","mameshiba":"in","savecat":"in","nifrel":"in","kobeanimal":"in",
     "harukas": "in", "umedasky": "in", "nakanoshima": "in", "kaiyukan": "in",
     "tsutenkaku": "in", "arima": "in",
 }
