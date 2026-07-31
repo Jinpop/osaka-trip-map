@@ -6,7 +6,7 @@
   --paper:#F2F4F7; --surface:#FFF; --surface2:#E9ECF1; --sheet:#FFF;
   --ink:#161A21; --ink2:#4C525E; --ink3:#7C838F; --line:#DCE0E7;
   --accent:#D2402E; --c-spot:#26688F; --c-local:#D2402E; --c-tourist:#9C6B12;
-  --c-hotel:#1E2430; --warn:#9A4A14; --warnbg:#FBEDE2;
+  --c-mart:#3E8E5A; --c-hotel:#1E2430; --warn:#9A4A14; --warnbg:#FBEDE2;
   --mapfx:saturate(1);
   --shadow:0 1px 2px rgba(16,20,28,.08),0 8px 24px -8px rgba(16,20,28,.18);
   --sans:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",Pretendard,"Noto Sans KR","Segoe UI",Roboto,sans-serif;
@@ -16,7 +16,7 @@
   --paper:#0C0F14; --surface:#161A21; --surface2:#1E232C; --sheet:#141821;
   --ink:#E8EBF0; --ink2:#A9B0BC; --ink3:#767D8A; --line:#272D37;
   --accent:#FF6E58; --c-spot:#63AAD6; --c-local:#FF6E58; --c-tourist:#D9A23F;
-  --c-hotel:#C9D1DD; --warn:#E0A76F; --warnbg:#2A2118;
+  --c-mart:#6FC98A; --c-hotel:#C9D1DD; --warn:#E0A76F; --warnbg:#2A2118;
   --mapfx:invert(1) hue-rotate(180deg) brightness(.99) contrast(.85) saturate(.75);
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -8px rgba(0,0,0,.6);
 }}
@@ -24,7 +24,7 @@
   --paper:#0C0F14; --surface:#161A21; --surface2:#1E232C; --sheet:#141821;
   --ink:#E8EBF0; --ink2:#A9B0BC; --ink3:#767D8A; --line:#272D37;
   --accent:#FF6E58; --c-spot:#63AAD6; --c-local:#FF6E58; --c-tourist:#D9A23F;
-  --c-hotel:#C9D1DD; --warn:#E0A76F; --warnbg:#2A2118;
+  --c-mart:#6FC98A; --c-hotel:#C9D1DD; --warn:#E0A76F; --warnbg:#2A2118;
   --mapfx:invert(1) hue-rotate(180deg) brightness(.99) contrast(.85) saturate(.75);
   --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -8px rgba(0,0,0,.6);
 }
@@ -32,7 +32,7 @@
   --paper:#F2F4F7; --surface:#FFF; --surface2:#E9ECF1; --sheet:#FFF;
   --ink:#161A21; --ink2:#4C525E; --ink3:#7C838F; --line:#DCE0E7;
   --accent:#D2402E; --c-spot:#26688F; --c-local:#D2402E; --c-tourist:#9C6B12;
-  --c-hotel:#1E2430; --warn:#9A4A14; --warnbg:#FBEDE2;
+  --c-mart:#3E8E5A; --c-hotel:#1E2430; --warn:#9A4A14; --warnbg:#FBEDE2;
   --mapfx:saturate(1);
   --shadow:0 1px 2px rgba(16,20,28,.08),0 8px 24px -8px rgba(16,20,28,.18);
 }
@@ -72,6 +72,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .chip.on.cat-spot{background:var(--c-spot);border-color:var(--c-spot);color:#fff}
 .chip.on.cat-local{background:var(--c-local);border-color:var(--c-local);color:#fff}
 .chip.on.cat-tourist{background:var(--c-tourist);border-color:var(--c-tourist);color:#fff}
+.chip.on.cat-mart{background:var(--c-mart);border-color:var(--c-mart);color:#fff}
 .chip .n{font-family:var(--mono);font-size:10px;opacity:.75;font-variant-numeric:tabular-nums}
 
 /* ---------- 지도 ---------- */
@@ -266,12 +267,12 @@ table.rev th{color:var(--ink3);font-weight:700;font-size:10px;letter-spacing:.05
 <script>
 const T=__TILES__, P=__DATA__;
 const TZ=[10,13,14,15], HOTEL=P.find(p=>p.cat==="hotel");
-const CATN={spot:"관광지",local:"로컬 맛집",tourist:"한국인 맛집",hotel:"숙소"};
-const CATC={spot:"var(--c-spot)",local:"var(--c-local)",tourist:"var(--c-tourist)",hotel:"var(--c-hotel)"};
+const CATN={spot:"관광지",local:"로컬 맛집",tourist:"한국인 맛집",mart:"마트·편의점",hotel:"숙소"};
+const CATC={spot:"var(--c-spot)",local:"var(--c-local)",tourist:"var(--c-tourist)",mart:"var(--c-mart)",hotel:"var(--c-hotel)"};
 
 /* ===== 상태 ===== */
 const LS="osaka2607";
-let S={cats:{spot:1,local:1,tourist:1},maxMin:90,day:"any",fav:0,q:"",view:"map",sel:null,shade:0};
+let S={cats:{spot:1,local:1,tourist:1,mart:1},maxMin:90,day:"any",fav:0,q:"",view:"map",sel:null,shade:0};
 const ENVN={in:"실내",cov:"지붕·아케이드",out:"실외"};
 const ENVI={in:"❄",cov:"⛱",out:"☀"};
 let fav=new Set(JSON.parse(localStorage.getItem(LS+"f")||"[]"));
@@ -375,7 +376,7 @@ function drawChips(){
   const n=c=>P.filter(p=>p.cat===c&&p.min<=S.maxMin&&openOn(p)).length;
   const mm=[[15,"15분"],[30,"30분"],[60,"1시간"],[90,"90분"]];
   chipsEl.innerHTML=
-    ["spot","local","tourist"].map(c=>`<button class="chip cat-${c} ${S.cats[c]?"on":""}" data-cat="${c}">
+    ["spot","local","tourist","mart"].map(c=>`<button class="chip cat-${c} ${S.cats[c]?"on":""}" data-cat="${c}">
        <i class="dot" style="background:${S.cats[c]?"#fff":CATC[c]}"></i>${CATN[c]}<span class="n">${n(c)}</span></button>`).join("")
     +`<span style="flex:none;width:1px;background:var(--line);margin:3px 2px"></span>`
     +mm.map(([v,l])=>`<button class="chip ${S.maxMin===v?"on":""}" data-min="${v}">≤${l}</button>`).join("")

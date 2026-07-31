@@ -67,6 +67,9 @@ ENV = {
     "whiterabbit":"in","mameshiba":"in","savecat":"in","nifrel":"in","kobeanimal":"in",
     "harukas": "in", "umedasky": "in", "nakanoshima": "in", "kaiyukan": "in",
     "tsutenkaku": "in", "arima": "in",
+    # 마트·편의점·100엔샵 — 전부 실내
+    "donki_dotonbori": "in", "tamade_nihonbashi": "in", "daiso_kuromon": "in",
+    "daiso_ebisubashi": "in", "lawson_shimanouchi": "in", "famima_shimanouchi": "in",
 }
 # 실외 줄서기가 긴 집 — 폭염엔 오픈런 아니면 피할 것
 QUEUE = {"mizuno", "ichiran", "moeyo", "roshoki", "yaekatsu", "daruma",
