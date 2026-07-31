@@ -4,6 +4,10 @@ import json, math
 
 d = json.load(open("places_geo.json"))
 
+# 좌표를 이미 확보한 편의점(Overpass 좌표 + GSI reverse geocoder 지명)을 합류
+from conv_stores import CONV_STORES
+d.extend(CONV_STORES)
+
 # 지역 기본값으로 안 맞는 개별 지점 (닛폰바시역 출발, 편도 도어투도어)
 MIN_OVERRIDE = {"kinkakuji": 85, "kiyomizu": 70, "kasuga": 55, "meriken": 52, "kaiyukan": 30}
 
